@@ -1,0 +1,42 @@
+DESTDIR     = $$PWD
+OBJECTS_DIR = $$DESTDIR/obj
+
+CUDA_SOURCES += cudamain.cu
+
+CUDA_DIR  = "F:/NVIDIA_CUDA/development"
+INCLUDEPATH  += $$CUDA_DIR/include
+QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
+SYSTEM_TYPE = 64  
+
+LIBS += -lcuda -lcudart
+
+CUDA_ARCH = sm_50
+
+NVCCFLAGS     = --use_fast_math
+
+CUDA_INC = $$join(INCLUDEPATH,'" -I"','-I"','"')
+
+MSVCRT_LINK_FLAG_DEBUG = "/MDd"
+MSVCRT_LINK_FLAG_RELEASE = "/MD"
+
+QMAKE_EXTRA_COMPILERS += cuda
+
+CONFIG(debug, debug|release) {
+
+    cuda_d.input = CUDA_SOURCES
+    cuda_d.output = $$OBJECTS_DIR/${QMAKE_FILE_BASE}.obj
+    cuda_d.commands = $$CUDA_DIR/bin/nvcc.exe -D_DEBUG $$NVCC_OPTIONS $$CUDA_INC $$LIBS --machine $$SYSTEM_TYPE \
+                     -arch=$$CUDA_ARCH -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME} -Xcompiler $$MSVCRT_LINK_FLAG_DEBUG
+    cuda_d.dependency_type = TYPE_C
+    QMAKE_EXTRA_COMPILERS += cuda_d
+}
+else {
+    # Release mode
+    cuda.input = CUDA_SOURCES
+    cuda.output = $$OBJECTS_DIR/${QMAKE_FILE_BASE}.obj #haven't test
+    cuda.commands = $$CUDA_DIR/bin/nvcc.exe $$NVCC_OPTIONS $$CUDA_INC $$LIBS --machine $$SYSTEM_TYPE \
+                    -arch=$$CUDA_ARCH -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME} -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE
+    cuda.dependency_type = TYPE_C
+    cuda.output = ${OBJECTS_DIR}${QMAKE_FILE_BASE}.o
+    QMAKE_EXTRA_COMPILERS += cuda
+}
